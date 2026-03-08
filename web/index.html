@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ray Tracer — C++ Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      color: #e0e0e8;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .hero {
+      position: relative;
+      padding: 80px 24px 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(100, 60, 200, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(40, 100, 220, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #c0c0ff, #8080ff, #c080ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.1rem;
+      color: #8888aa;
+      max-width: 640px;
+      margin: 0 auto 36px;
+    }
+
+    .download-section {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6050d0, #4040b0);
+      color: white;
+      border: 1px solid rgba(120, 100, 255, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(80, 60, 200, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #c0c0e0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #a0a0c0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .platform-note {
+      font-size: 0.8rem;
+      color: #666688;
+      margin-top: 8px;
+    }
+
+    /* Screenshot showcase */
+    .showcase {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .showcase h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #c0c0e0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .render-frame {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .render-frame img {
+      width: 100%;
+      display: block;
+    }
+
+    .render-label {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: #aaaacc;
+    }
+
+    /* Features */
+    .features {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 24px 60px;
+    }
+
+    .features h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #c0c0e0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 24px;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      color: #a0a0d0;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #7777aa;
+    }
+
+    /* Usage section */
+    .usage {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 24px 80px;
+    }
+
+    .usage h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #c0c0e0;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .code-block {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #b0b0d0;
+      overflow-x: auto;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .code-block .comment { color: #556677; }
+    .code-block .cmd { color: #a0a0ff; }
+    .code-block .flag { color: #80c0a0; }
+    .code-block .val { color: #e0a060; }
+
+    .deps-note {
+      background: rgba(100, 80, 200, 0.08);
+      border: 1px solid rgba(100, 80, 200, 0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.9rem;
+      color: #a0a0cc;
+      margin-bottom: 20px;
+    }
+
+    .deps-note strong {
+      color: #c0c0e0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      color: #444466;
+      font-size: 0.8rem;
+    }
+    .footer a { color: #7777aa; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <h1>Ray Tracer</h1>
+  <p class="subtitle">
+    An interactive ray tracer with a GUI built in C++17. Adjust spheres, camera, and materials
+    in real time, then render scenes with reflections, shadows, and anti-aliasing.
+  </p>
+
+  <div class="download-section">
+    <a href="/download/raytracer-gui" class="btn btn-primary" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Download GUI App
+    </a>
+    <a href="/download/raytracer-cli" class="btn btn-secondary" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      CLI Version
+    </a>
+    <a href="/download/src/main_gui.cpp" class="btn btn-outline" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+      </svg>
+      Source Code
+    </a>
+  </div>
+  <p class="platform-note">Linux x86_64 &middot; GUI requires SDL2 + OpenGL</p>
+</section>
+
+<section class="showcase">
+  <h2>Example Render</h2>
+  <div class="screenshot-grid">
+    <div class="render-frame">
+      <img src="/images/render.bmp" alt="Ray traced scene with reflective spheres on a checkerboard floor">
+      <span class="render-label">1920x1080 &middot; 16x AA</span>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <h2>Features</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Interactive GUI</h3>
+      <p>Adjust sphere positions, colors, reflectivity, and camera in real time with a full ImGui interface.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Live Preview</h3>
+      <p>Watch the render progressively build line-by-line with a live texture preview in the GUI window.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Reflections</h3>
+      <p>Recursive ray bouncing for mirror-like surfaces with per-material reflectivity control.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Shadows &amp; Lighting</h3>
+      <p>Multiple light sources with hard shadows, Blinn-Phong shading, and Reinhard tone mapping.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Anti-aliasing</h3>
+      <p>Configurable supersampled AA from 1x to 64x samples per pixel for buttery-smooth edges.</p>
+    </div>
+    <div class="feature-card">
+      <h3>BMP Export</h3>
+      <p>Save your render to a BMP file at any resolution up to 4K. CLI version also available for scripting.</p>
+    </div>
+  </div>
+</section>
+
+<section class="usage">
+  <h2>Getting Started</h2>
+
+  <div class="deps-note">
+    <strong>Requirements:</strong> The GUI app needs <code>libsdl2</code> and OpenGL drivers installed.
+    On Ubuntu/Debian: <code>sudo apt install libsdl2-2.0-0</code>. Most desktop Linux distros include these.
+  </div>
+
+  <div class="code-block">
+    <span class="comment"># GUI version — interactive window</span><br>
+    <span class="cmd">chmod +x</span> raytracer-gui<br>
+    <span class="cmd">./raytracer-gui</span><br><br>
+    <span class="comment"># CLI version — render from command line (no deps needed)</span><br>
+    <span class="cmd">chmod +x</span> raytracer-cli<br>
+    <span class="cmd">./raytracer-cli</span> <span class="flag">-w</span> <span class="val">1920</span> <span class="flag">-h</span> <span class="val">1080</span> <span class="flag">-s</span> <span class="val">4</span> <span class="flag">-o</span> <span class="val">render.bmp</span>
+  </div>
+
+  <div class="code-block">
+    <span class="comment"># Build from source (needs SDL2 dev + ImGui)</span><br>
+    <span class="cmd">sudo apt install</span> libsdl2-dev libgl-dev<br>
+    <span class="cmd">g++</span> <span class="flag">-O3 -std=c++17 -I.</span> main_gui.cpp imgui*.cpp imgui_impl_*.cpp <span class="flag">$(sdl2-config --cflags --libs) -lGL -lm -lpthread</span>
+  </div>
+</section>
+
+<footer class="footer">
+  Built with C++17, SDL2, and Dear ImGui &middot; <a href="https://github.com/Stathsh">GitHub</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+services:
+  raytracer:
+    build: .
+    ports:
+      - "8002:80"
+    restart: unless-stopped
