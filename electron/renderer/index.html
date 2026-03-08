@@ -224,6 +224,16 @@
       line-height: 1.6;
     }
 
+    /* Version info */
+    .version-info {
+      margin-top: auto;
+      padding-top: 12px;
+      font-size: 10px;
+      color: #333348;
+      text-align: center;
+      border-top: 1px solid var(--panel-border);
+    }
+
     /* Update banner */
     .update-banner {
       position: fixed;
@@ -398,6 +408,8 @@
     Adjust settings, then click Render.<br>
     Use Export to save the image.
   </div>
+
+  <div class="version-info" id="versionInfo"></div>
 </div>
 
 <div class="preview" id="previewArea">
@@ -680,6 +692,13 @@ document.addEventListener('keydown', (e) => {
     startRender();
   }
 });
+
+// ─── Version info ──────────────────────────────────────────
+if (window.api && window.api.version) {
+  $('versionInfo').textContent = 'v' + window.api.version + ' \u00B7 Updated Mar 2026';
+} else {
+  $('versionInfo').textContent = 'Web version';
+}
 
 // ─── Update checker ────────────────────────────────────────
 if (window.api && window.api.onUpdateAvailable) {
