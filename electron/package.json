@@ -1,6 +1,6 @@
 {
   "name": "raytracer",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Interactive ray tracer with reflections, shadows, and anti-aliasing",
   "main": "main.js",
   "author": "Stathsh",

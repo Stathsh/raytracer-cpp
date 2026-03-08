@@ -293,7 +293,7 @@
 
   <div class="download-section">
     <div class="download-main">
-      <a id="mainDownload" href="/download/RayTracer-mac-apple-silicon.zip?v=1.2.0" class="btn btn-primary" download>
+      <a id="mainDownload" href="/download/RayTracer-mac-apple-silicon.zip?v=1.2.1" class="btn btn-primary" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
         </svg>
@@ -302,15 +302,15 @@
     </div>
 
     <div class="other-downloads">
-      <a href="/download/RayTracer-mac-apple-silicon.zip?v=1.2.0" class="btn-alt" id="dlMacArm" download>
+      <a href="/download/RayTracer-mac-apple-silicon.zip?v=1.2.1" class="btn-alt" id="dlMacArm" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
         macOS (Apple Silicon)
       </a>
-      <a href="/download/RayTracer-mac-intel.zip?v=1.2.0" class="btn-alt" id="dlMacIntel" download>
+      <a href="/download/RayTracer-mac-intel.zip?v=1.2.1" class="btn-alt" id="dlMacIntel" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
         macOS (Intel)
       </a>
-      <a href="/download/RayTracer-linux.AppImage?v=1.2.0" class="btn-alt" id="dlLinux" download>
+      <a href="/download/RayTracer-linux.AppImage?v=1.2.1" class="btn-alt" id="dlLinux" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
         Linux (AppImage)
       </a>
@@ -413,11 +413,11 @@
 
   if (ua.includes('mac')) {
     // Check for Apple Silicon hint (not 100% reliable but best we can do)
-    mainBtn.href = '/download/RayTracer-mac-apple-silicon.zip?v=1.2.0';
+    mainBtn.href = '/download/RayTracer-mac-apple-silicon.zip?v=1.2.1';
     mainText.textContent = 'Download for macOS';
     macNote.style.display = 'block';
   } else if (ua.includes('linux')) {
-    mainBtn.href = '/download/RayTracer-linux.AppImage?v=1.2.0';
+    mainBtn.href = '/download/RayTracer-linux.AppImage?v=1.2.1';
     mainText.textContent = 'Download for Linux';
     macNote.style.display = 'none';
     // Switch to linux tab
@@ -426,7 +426,7 @@
     document.querySelector('[data-tab="linux"]').classList.add('active');
     document.getElementById('tab-linux').classList.add('active');
   } else {
-    mainBtn.href = '/download/RayTracer-linux.AppImage?v=1.2.0';
+    mainBtn.href = '/download/RayTracer-linux.AppImage?v=1.2.1';
     mainText.textContent = 'Download';
     macNote.style.display = 'none';
   }

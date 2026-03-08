@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const UPDATE_URL = 'https://raytracer-cpp.alexstath.com/version.json';
 
 let mainWindow;
@@ -63,8 +63,8 @@ app.on('activate', () => {
 });
 
 // Open external URL
-ipcMain.handle('open-external', (event, url) => {
-  shell.openExternal(url);
+ipcMain.handle('open-external', async (event, url) => {
+  await shell.openExternal(url);
 });
 
 // Save file dialog
