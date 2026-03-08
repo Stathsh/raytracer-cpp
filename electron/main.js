@@ -1,8 +1,31 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+
+const APP_VERSION = '1.0.0';
+const UPDATE_URL = 'https://raytracer-cpp.alexstath.com/version.json';
 
 let mainWindow;
+
+function checkForUpdates() {
+  https.get(UPDATE_URL, (res) => {
+    let data = '';
+    res.on('data', (chunk) => data += chunk);
+    res.on('end', () => {
+      try {
+        const info = JSON.parse(data);
+        if (info.version && info.version !== APP_VERSION) {
+          mainWindow.webContents.send('update-available', {
+            current: APP_VERSION,
+            latest: info.version,
+            url: info.url,
+          });
+        }
+      } catch (e) { /* ignore parse errors */ }
+    });
+  }).on('error', () => { /* ignore network errors */ });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -22,6 +45,11 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   mainWindow.setMenuBarVisibility(false);
+
+  // Check for updates 3 seconds after launch
+  mainWindow.webContents.on('did-finish-load', () => {
+    setTimeout(checkForUpdates, 3000);
+  });
 }
 
 app.whenReady().then(createWindow);
@@ -32,6 +60,11 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+// Open external URL
+ipcMain.handle('open-external', (event, url) => {
+  shell.openExternal(url);
 });
 
 // Save file dialog

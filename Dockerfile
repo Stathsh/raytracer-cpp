@@ -5,9 +5,10 @@ COPY src/raytracer.cpp .
 RUN g++ -O3 -std=c++17 -static -o raytracer raytracer.cpp -lm
 RUN ./raytracer -w 1920 -h 1080 -s 4 -o render.bmp
 
-# Serve website + downloads
+# Serve website (downloads mounted as volume)
 FROM nginx:alpine
-COPY web/ /usr/share/nginx/html/
+COPY web/index.html /usr/share/nginx/html/index.html
+COPY web/version.json /usr/share/nginx/html/version.json
 COPY --from=renderer /build/render.bmp /usr/share/nginx/html/images/render.bmp
 COPY src/raytracer_engine.h /usr/share/nginx/html/download/src/raytracer_engine.h
 COPY src/main_gui.cpp /usr/share/nginx/html/download/src/main_gui.cpp

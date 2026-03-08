@@ -3,4 +3,6 @@ services:
     build: .
     ports:
       - "8002:80"
+    volumes:
+      - ./web/download:/usr/share/nginx/html/download:ro
     restart: unless-stopped

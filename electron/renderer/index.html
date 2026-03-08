@@ -224,6 +224,40 @@
       line-height: 1.6;
     }
 
+    /* Update banner */
+    .update-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(90deg, #3a2a80, #4a35a0);
+      color: #e0e0ff;
+      font-size: 12px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 1000;
+      display: none;
+    }
+    .update-banner.show { display: flex; }
+    .update-banner a {
+      color: #fff;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .update-banner .dismiss {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #b0b0d0;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
     /* ─── Preview area ────────────────────────────────── */
     .preview {
       flex: 1;
@@ -266,6 +300,12 @@
   </style>
 </head>
 <body>
+
+<div class="update-banner" id="updateBanner">
+  <span>A new version is available (<span id="updateVersion"></span>)</span>
+  <a id="updateLink">Download update</a>
+  <button class="dismiss" id="updateDismiss">&times;</button>
+</div>
 
 <div class="sidebar">
   <div class="app-title">RAY TRACER</div>
@@ -640,6 +680,20 @@ document.addEventListener('keydown', (e) => {
     startRender();
   }
 });
+
+// ─── Update checker ────────────────────────────────────────
+if (window.api && window.api.onUpdateAvailable) {
+  window.api.onUpdateAvailable((data) => {
+    $('updateVersion').textContent = 'v' + data.latest;
+    $('updateLink').addEventListener('click', () => {
+      if (window.api.openExternal) window.api.openExternal(data.url);
+    });
+    $('updateBanner').classList.add('show');
+  });
+  $('updateDismiss').addEventListener('click', () => {
+    $('updateBanner').classList.remove('show');
+  });
+}
 </script>
 
 </body>
