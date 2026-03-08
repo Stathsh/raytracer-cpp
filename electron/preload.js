@@ -1,11 +1,13 @@
-const { contextBridge, ipcRenderer, shell } = require('electron');
-
+const { contextBridge, ipcRenderer } = require('electron');
 const pkg = require('./package.json');
 
 contextBridge.exposeInMainWorld('api', {
+  version: pkg.version,
+  platform: process.platform,
   saveFile: (data) => ipcRenderer.invoke('save-file', data),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, data) => callback(data)),
-  platform: process.platform,
-  version: pkg.version,
+  checkForUpdate: () => ipcRenderer.invoke('check-for-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  onDownloadProgress: (cb) => ipcRenderer.on('update-download-progress', (_, pct) => cb(pct)),
+  onUpdateStatus: (cb) => ipcRenderer.on('update-status', (_, status) => cb(status)),
 });

@@ -258,12 +258,27 @@
     .update-status.checking { color: #8888a0; }
     .update-status.uptodate { color: #4caf50; }
     .update-status.available { color: #a090e0; }
-    .update-status.available a {
-      color: #c0b0ff;
-      text-decoration: underline;
-      cursor: pointer;
-    }
+    .update-status.available { color: #a090e0; }
     .update-status.error { color: #aa5555; }
+    .btn-install {
+      width: 100%;
+      padding: 7px 12px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: none;
+      background: linear-gradient(135deg, #5545b0, #4040a0);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-install:hover { background: linear-gradient(135deg, #6555c0, #5050b0); }
+    .btn-install:disabled { opacity: 0.5; cursor: not-allowed; }
+    .update-progress {
+      margin-top: 6px;
+    }
 
 
     /* ─── Preview area ────────────────────────────────── */
@@ -405,6 +420,10 @@
     <span class="version-text" id="versionInfo"></span>
     <button class="btn-update" id="btnCheckUpdate">Check for Updates</button>
     <div class="update-status" id="updateStatus"></div>
+    <button class="btn-install" id="btnInstallUpdate" style="display:none;">Install &amp; Restart</button>
+    <div class="update-progress" id="updateProgress" style="display:none;">
+      <div class="progress-wrap"><div class="progress-bar" id="updateProgressBar" style="width:0%"></div></div>
+    </div>
   </div>
 </div>
 
@@ -696,36 +715,72 @@ $('versionInfo').textContent = 'v' + appVersion;
 // ─── Update checker ────────────────────────────────────────
 $('btnCheckUpdate').addEventListener('click', async () => {
   const status = $('updateStatus');
+  const installBtn = $('btnInstallUpdate');
+  installBtn.style.display = 'none';
+  $('updateProgress').style.display = 'none';
   status.className = 'update-status checking';
   status.textContent = 'Checking...';
 
   try {
-    const res = await fetch('https://raytracer-cpp.alexstath.com/version.json', { cache: 'no-store' });
-    const info = await res.json();
-
-    if (info.version && info.version !== appVersion) {
-      status.className = 'update-status available';
-      const downloadUrl = info.url || 'https://raytracer-cpp.alexstath.com';
-      const link = document.createElement('a');
-      link.textContent = 'Download v' + info.version;
-      link.href = '#';
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.api && window.api.openExternal) {
-          window.api.openExternal(downloadUrl);
-        } else {
-          window.open(downloadUrl, '_blank');
-        }
-      });
-      status.textContent = 'New version available! ';
-      status.appendChild(link);
+    if (window.api && window.api.checkForUpdate) {
+      const result = await window.api.checkForUpdate();
+      if (result.error) {
+        status.className = 'update-status error';
+        status.textContent = result.error;
+      } else if (result.hasUpdate) {
+        status.className = 'update-status available';
+        status.textContent = 'v' + result.latestVersion + ' available';
+        installBtn.textContent = 'Install v' + result.latestVersion + ' & Restart';
+        installBtn.style.display = 'block';
+        installBtn.disabled = false;
+      } else {
+        status.className = 'update-status uptodate';
+        status.textContent = 'You\'re up to date.';
+      }
     } else {
-      status.className = 'update-status uptodate';
-      status.textContent = 'You\'re up to date.';
+      const res = await fetch('https://raytracer-cpp.alexstath.com/version.json', { cache: 'no-store' });
+      const info = await res.json();
+      status.className = info.version !== appVersion ? 'update-status available' : 'update-status uptodate';
+      status.textContent = info.version !== appVersion ? 'v' + info.version + ' available (re-download from site)' : 'You\'re up to date.';
     }
   } catch (e) {
     status.className = 'update-status error';
     status.textContent = 'Could not check for updates.';
+  }
+});
+
+$('btnInstallUpdate').addEventListener('click', async () => {
+  const status = $('updateStatus');
+  const installBtn = $('btnInstallUpdate');
+  const progressWrap = $('updateProgress');
+
+  installBtn.disabled = true;
+  installBtn.textContent = 'Downloading...';
+  progressWrap.style.display = 'block';
+
+  if (window.api.onDownloadProgress) {
+    window.api.onDownloadProgress((pct) => {
+      $('updateProgressBar').style.width = pct + '%';
+      installBtn.textContent = 'Downloading... ' + pct + '%';
+    });
+  }
+  if (window.api.onUpdateStatus) {
+    window.api.onUpdateStatus((s) => {
+      if (s === 'installing') {
+        installBtn.textContent = 'Installing & restarting...';
+        status.className = 'update-status checking';
+        status.textContent = 'App will restart shortly...';
+      }
+    });
+  }
+
+  const result = await window.api.installUpdate();
+  if (result && result.error) {
+    status.className = 'update-status error';
+    status.textContent = 'Update failed: ' + result.error;
+    installBtn.disabled = false;
+    installBtn.textContent = 'Retry';
+    progressWrap.style.display = 'none';
   }
 });
 </script>
