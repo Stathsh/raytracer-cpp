@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 const UPDATE_URL = 'https://raytracer-cpp.alexstath.com/version.json';
 
 let mainWindow;
@@ -45,6 +45,12 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   mainWindow.setMenuBarVisibility(false);
+
+  // Open external links in the user's browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
 
   // Check for updates 3 seconds after launch
   mainWindow.webContents.on('did-finish-load', () => {

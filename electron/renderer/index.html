@@ -705,11 +705,16 @@ $('btnCheckUpdate').addEventListener('click', async () => {
 
     if (info.version && info.version !== appVersion) {
       status.className = 'update-status available';
+      const downloadUrl = info.url || 'https://raytracer-cpp.alexstath.com';
       const link = document.createElement('a');
       link.textContent = 'Download v' + info.version;
-      link.addEventListener('click', () => {
+      link.href = '#';
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
         if (window.api && window.api.openExternal) {
-          window.api.openExternal(info.url || 'https://raytracer-cpp.alexstath.com');
+          window.api.openExternal(downloadUrl);
+        } else {
+          window.open(downloadUrl, '_blank');
         }
       });
       status.textContent = 'New version available! ';
