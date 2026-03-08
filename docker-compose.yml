@@ -5,4 +5,5 @@ services:
       - "8002:80"
     volumes:
       - ./web/download:/usr/share/nginx/html/download:ro
+      - ./web/version.json:/usr/share/nginx/html/version.json:ro
     restart: unless-stopped

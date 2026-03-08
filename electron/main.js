@@ -4,7 +4,7 @@ const fs = require('fs');
 const https = require('https');
 const { execSync, spawn } = require('child_process');
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const UPDATE_URL = 'https://raytracer-cpp.alexstath.com/version.json';
 const DOWNLOAD_URLS = {
   'darwin-arm64': 'https://raytracer-cpp.alexstath.com/download/RayTracer-mac-apple-silicon.zip',
