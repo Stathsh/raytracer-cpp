@@ -173,7 +173,7 @@ self.onmessage = function(e) {
       for (let sy = 0; sy < samples; sy++) {
         for (let sx = 0; sx < samples; sx++) {
           const u = ((x + (sx + 0.5) / samples) / width) * 2.0 - 1.0;
-          const v = 1.0 - ((y + (sy + 0.5) / samples) / height) * 2.0;
+          const v = ((y + (sy + 0.5) / samples) / height) * 2.0 - 1.0;
           const dir = forward.add(right.mul(u * halfW)).add(up.mul(v * halfH)).normalized();
           const ray = { origin: scene.camPos, dir };
           const color = shade(ray, scene);
@@ -184,7 +184,7 @@ self.onmessage = function(e) {
       }
 
       const invS = 1.0 / (samples * samples);
-      const idx = (y * width + x) * 4;
+      const idx = ((height - 1 - y) * width + x) * 4;
       pixels[idx + 0] = tonemap(cr * invS);
       pixels[idx + 1] = tonemap(cg * invS);
       pixels[idx + 2] = tonemap(cb * invS);
@@ -197,7 +197,7 @@ self.onmessage = function(e) {
         row: y,
         total: height,
         pixels: pixels.buffer,
-      }, [pixels.buffer.slice(0)]); // send copy
+      }, [pixels.buffer.slice(0)]);
     }
   }
 

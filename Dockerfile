@@ -24,6 +24,8 @@ RUN printf 'server {\n\
 \n\
     location /download/ {\n\
         add_header Content-Disposition "attachment";\n\
+        add_header Cache-Control "no-cache, no-store, must-revalidate";\n\
+        add_header Pragma "no-cache";\n\
         types { application/octet-stream ""; }\n\
         default_type application/octet-stream;\n\
     }\n\
