@@ -224,49 +224,47 @@
       line-height: 1.6;
     }
 
-    /* Version info */
-    .version-info {
+    /* Version footer */
+    .version-footer {
       margin-top: auto;
       padding-top: 12px;
-      font-size: 10px;
-      color: #333348;
-      text-align: center;
       border-top: 1px solid var(--panel-border);
+      text-align: center;
     }
-
-    /* Update banner */
-    .update-banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(90deg, #3a2a80, #4a35a0);
-      color: #e0e0ff;
-      font-size: 12px;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      z-index: 1000;
-      display: none;
+    .version-text {
+      font-size: 10px;
+      color: #444460;
+      display: block;
+      margin-bottom: 6px;
     }
-    .update-banner.show { display: flex; }
-    .update-banner a {
-      color: #fff;
+    .btn-update {
+      width: 100%;
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #8888a0;
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-update:hover { background: rgba(255,255,255,0.08); color: #b0b0d0; }
+    .update-status {
+      font-size: 11px;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+    .update-status.checking { color: #8888a0; }
+    .update-status.uptodate { color: #4caf50; }
+    .update-status.available { color: #a090e0; }
+    .update-status.available a {
+      color: #c0b0ff;
       text-decoration: underline;
       cursor: pointer;
-      font-weight: 600;
     }
-    .update-banner .dismiss {
-      position: absolute;
-      right: 12px;
-      background: none;
-      border: none;
-      color: #b0b0d0;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    .update-status.error { color: #aa5555; }
+
 
     /* ─── Preview area ────────────────────────────────── */
     .preview {
@@ -310,12 +308,6 @@
   </style>
 </head>
 <body>
-
-<div class="update-banner" id="updateBanner">
-  <span>A new version is available (<span id="updateVersion"></span>)</span>
-  <a id="updateLink">Download update</a>
-  <button class="dismiss" id="updateDismiss">&times;</button>
-</div>
 
 <div class="sidebar">
   <div class="app-title">RAY TRACER</div>
@@ -409,7 +401,11 @@
     Use Export to save the image.
   </div>
 
-  <div class="version-info" id="versionInfo"></div>
+  <div class="version-footer">
+    <span class="version-text" id="versionInfo"></span>
+    <button class="btn-update" id="btnCheckUpdate">Check for Updates</button>
+    <div class="update-status" id="updateStatus"></div>
+  </div>
 </div>
 
 <div class="preview" id="previewArea">
@@ -694,32 +690,38 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ─── Version info ──────────────────────────────────────────
-if (window.api && window.api.version) {
-  $('versionInfo').textContent = 'v' + window.api.version + ' \u00B7 Updated Mar 2026';
-} else {
-  $('versionInfo').textContent = 'Web version';
-}
+const appVersion = (window.api && window.api.version) || 'dev';
+$('versionInfo').textContent = 'v' + appVersion;
 
 // ─── Update checker ────────────────────────────────────────
-(async function checkForUpdates() {
-  if (!window.api || !window.api.version) return;
+$('btnCheckUpdate').addEventListener('click', async () => {
+  const status = $('updateStatus');
+  status.className = 'update-status checking';
+  status.textContent = 'Checking...';
+
   try {
-    await new Promise(r => setTimeout(r, 3000));
-    const res = await fetch('https://raytracer-cpp.alexstath.com/version.json');
+    const res = await fetch('https://raytracer-cpp.alexstath.com/version.json', { cache: 'no-store' });
     const info = await res.json();
-    if (info.version && info.version !== window.api.version) {
-      $('updateVersion').textContent = 'v' + info.version;
-      $('updateLink').addEventListener('click', () => {
-        if (window.api.openExternal) window.api.openExternal(info.url || 'https://raytracer-cpp.alexstath.com');
+
+    if (info.version && info.version !== appVersion) {
+      status.className = 'update-status available';
+      const link = document.createElement('a');
+      link.textContent = 'Download v' + info.version;
+      link.addEventListener('click', () => {
+        if (window.api && window.api.openExternal) {
+          window.api.openExternal(info.url || 'https://raytracer-cpp.alexstath.com');
+        }
       });
-      $('updateBanner').classList.add('show');
+      status.textContent = 'New version available! ';
+      status.appendChild(link);
+    } else {
+      status.className = 'update-status uptodate';
+      status.textContent = 'You\'re up to date.';
     }
   } catch (e) {
-    // No network — skip silently
+    status.className = 'update-status error';
+    status.textContent = 'Could not check for updates.';
   }
-})();
-$('updateDismiss').addEventListener('click', () => {
-  $('updateBanner').classList.remove('show');
 });
 </script>
 
