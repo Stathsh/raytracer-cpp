@@ -701,18 +701,26 @@ if (window.api && window.api.version) {
 }
 
 // ─── Update checker ────────────────────────────────────────
-if (window.api && window.api.onUpdateAvailable) {
-  window.api.onUpdateAvailable((data) => {
-    $('updateVersion').textContent = 'v' + data.latest;
-    $('updateLink').addEventListener('click', () => {
-      if (window.api.openExternal) window.api.openExternal(data.url);
-    });
-    $('updateBanner').classList.add('show');
-  });
-  $('updateDismiss').addEventListener('click', () => {
-    $('updateBanner').classList.remove('show');
-  });
-}
+(async function checkForUpdates() {
+  if (!window.api || !window.api.version) return;
+  try {
+    await new Promise(r => setTimeout(r, 3000));
+    const res = await fetch('https://raytracer-cpp.alexstath.com/version.json');
+    const info = await res.json();
+    if (info.version && info.version !== window.api.version) {
+      $('updateVersion').textContent = 'v' + info.version;
+      $('updateLink').addEventListener('click', () => {
+        if (window.api.openExternal) window.api.openExternal(info.url || 'https://raytracer-cpp.alexstath.com');
+      });
+      $('updateBanner').classList.add('show');
+    }
+  } catch (e) {
+    // No network — skip silently
+  }
+})();
+$('updateDismiss').addEventListener('click', () => {
+  $('updateBanner').classList.remove('show');
+});
 </script>
 
 </body>

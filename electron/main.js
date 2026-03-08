@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const UPDATE_URL = 'https://raytracer-cpp.alexstath.com/version.json';
 
 let mainWindow;
