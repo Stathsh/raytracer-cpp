@@ -1,0 +1,43 @@
+{
+  "name": "raytracer",
+  "version": "1.0.0",
+  "description": "Interactive ray tracer with reflections, shadows, and anti-aliasing",
+  "main": "main.js",
+  "author": "Stathsh",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:linux": "electron-builder --linux AppImage",
+    "build:mac": "electron-builder --mac zip",
+    "build:win": "electron-builder --win nsis",
+    "build:all": "electron-builder --linux AppImage --mac zip"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.stathsh.raytracer",
+    "productName": "Ray Tracer",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "Graphics"
+    },
+    "mac": {
+      "target": "zip",
+      "category": "public.app-category.graphics-design"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false
+    }
+  }
+}

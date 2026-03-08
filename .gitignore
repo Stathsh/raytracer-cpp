@@ -2,3 +2,13 @@
 build/
 *.o
 raytracer
+
+# Electron
+electron/node_modules/
+electron/dist/
+electron/out/
+
+# Downloads (built artifacts, too large for git)
+web/download/*.AppImage
+web/download/*.zip
+web/download/*.exe

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ray Tracer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #0e0e16;
+      --panel-border: rgba(255,255,255,0.06);
+      --input-bg: #14141e;
+      --input-border: rgba(255,255,255,0.08);
+      --text: #d0d0dc;
+      --text-dim: #6666880;
+      --text-muted: #555568;
+      --accent: #6055d0;
+      --accent-hover: #7065e0;
+      --green: #2a8a42;
+      --green-hover: #35a050;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      user-select: none;
+    }
+
+    /* ─── Sidebar ─────────────────────────────────────── */
+    .sidebar {
+      width: 300px;
+      min-width: 300px;
+      background: var(--panel);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    .app-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #8080d0;
+      margin-bottom: 4px;
+      padding: 4px 0 8px;
+      -webkit-app-region: drag;
+    }
+
+    .section {
+      margin-bottom: 8px;
+    }
+
+    .section-header {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 8px 0 6px;
+      border-bottom: 1px solid var(--panel-border);
+      margin-bottom: 8px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .field label {
+      width: 70px;
+      min-width: 70px;
+      font-size: 12px;
+      color: #8888a0;
+    }
+
+    .field input, .field select {
+      flex: 1;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: rgba(100, 80, 220, 0.4);
+    }
+
+    .field select {
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      padding: 2px;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      height: 6px;
+      padding: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .range-row label { width: 70px; min-width: 70px; font-size: 12px; color: #8888a0; }
+    .range-row input[type="range"] { flex: 1; }
+    .range-row .range-val { width: 36px; text-align: right; font-size: 11px; color: #9999bb; font-family: monospace; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      color: white;
+    }
+
+    .btn-render {
+      background: var(--green);
+      width: 100%;
+      margin: 4px 0;
+    }
+    .btn-render:hover { background: var(--green-hover); }
+    .btn-render:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-cancel {
+      background: #8a2a2a;
+      width: 100%;
+      margin: 4px 0;
+    }
+    .btn-cancel:hover { background: #a03535; }
+
+    .btn-save {
+      background: var(--accent);
+      width: 100%;
+      margin: 4px 0;
+    }
+    .btn-save:hover { background: var(--accent-hover); }
+    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Progress bar */
+    .progress-wrap {
+      background: var(--input-bg);
+      border-radius: 6px;
+      overflow: hidden;
+      height: 8px;
+      margin: 6px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #8070e0);
+      transition: width 0.1s;
+      border-radius: 6px;
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin: 4px 0;
+    }
+
+    .status-text.success {
+      color: #4caf50;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #444460;
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    /* ─── Preview area ────────────────────────────────── */
+    .preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #08080c;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview canvas {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: auto;
+    }
+
+    .placeholder {
+      color: #333348;
+      font-size: 15px;
+      text-align: center;
+    }
+    .placeholder .big {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
+
+    .render-info {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #8888aa;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="app-title">RAY TRACER</div>
+
+  <!-- Render Settings -->
+  <div class="section">
+    <div class="section-header">Render Settings</div>
+    <div class="field">
+      <label>Resolution</label>
+      <select id="resolution">
+        <option value="640x360">640 x 360</option>
+        <option value="800x450" selected>800 x 450</option>
+        <option value="1280x720">1280 x 720</option>
+        <option value="1920x1080">1920 x 1080</option>
+        <option value="2560x1440">2560 x 1440</option>
+        <option value="3840x2160">3840 x 2160</option>
+      </select>
+    </div>
+    <div class="range-row">
+      <label>AA Samples</label>
+      <input type="range" id="samples" min="1" max="8" value="2">
+      <span class="range-val" id="samplesVal">4x</span>
+    </div>
+  </div>
+
+  <button class="btn btn-render" id="btnRender">Render</button>
+  <button class="btn btn-cancel" id="btnCancel" style="display:none;">Cancel</button>
+  <div class="progress-wrap" id="progressWrap" style="display:none;">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="status-text" id="status"></div>
+
+  <!-- Camera -->
+  <div class="section">
+    <div class="section-header">Camera</div>
+    <div class="field"><label>Pos X</label><input type="number" id="camX" value="0" step="0.5"></div>
+    <div class="field"><label>Pos Y</label><input type="number" id="camY" value="3" step="0.5"></div>
+    <div class="field"><label>Pos Z</label><input type="number" id="camZ" value="8" step="0.5"></div>
+    <div class="field"><label>Look X</label><input type="number" id="tgtX" value="0" step="0.5"></div>
+    <div class="field"><label>Look Y</label><input type="number" id="tgtY" value="0" step="0.5"></div>
+    <div class="field"><label>Look Z</label><input type="number" id="tgtZ" value="0" step="0.5"></div>
+    <div class="range-row">
+      <label>FOV</label>
+      <input type="range" id="fov" min="20" max="120" value="60">
+      <span class="range-val" id="fovVal">60</span>
+    </div>
+  </div>
+
+  <!-- Spheres -->
+  <div class="section">
+    <div class="section-header">Spheres</div>
+    <div class="field">
+      <label>Select</label>
+      <select id="sphereSelect">
+        <option value="0">Mirror Sphere</option>
+        <option value="1">Red Sphere</option>
+        <option value="2">Green Sphere</option>
+        <option value="3">Blue Sphere</option>
+        <option value="4">Gold Sphere</option>
+        <option value="5">Purple Sphere</option>
+        <option value="6">White Sphere</option>
+      </select>
+    </div>
+    <div class="field"><label>Pos X</label><input type="number" id="sX" step="0.2"></div>
+    <div class="field"><label>Pos Y</label><input type="number" id="sY" step="0.2"></div>
+    <div class="field"><label>Pos Z</label><input type="number" id="sZ" step="0.2"></div>
+    <div class="field"><label>Radius</label><input type="number" id="sR" step="0.1" min="0.1"></div>
+    <div class="field"><label>Color</label><input type="color" id="sColor"></div>
+    <div class="range-row">
+      <label>Reflect</label>
+      <input type="range" id="sRefl" min="0" max="100" value="0">
+      <span class="range-val" id="sReflVal">0%</span>
+    </div>
+    <div class="range-row">
+      <label>Shiny</label>
+      <input type="range" id="sShiny" min="4" max="256" value="32">
+      <span class="range-val" id="sShinyVal">32</span>
+    </div>
+    <div class="field"><label>Enabled</label><input type="checkbox" id="sEnabled" checked></div>
+  </div>
+
+  <!-- Export -->
+  <div class="section">
+    <div class="section-header">Export</div>
+    <button class="btn btn-save" id="btnSave" disabled>Save BMP</button>
+    <div class="status-text" id="saveStatus"></div>
+  </div>
+
+  <div class="hint">
+    Adjust settings, then click Render.<br>
+    Use Export to save the image.
+  </div>
+</div>
+
+<div class="preview" id="previewArea">
+  <div class="placeholder" id="placeholder">
+    <div class="big">&#9673;</div>
+    Click Render to start
+  </div>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <div class="render-info" id="renderInfo" style="display:none;"></div>
+</div>
+
+<script>
+// ─── Default Scene Data ────────────────────────────────────
+const defaultSpheres = [
+  { center: {x:0, y:0.5, z:0}, radius: 1.5, enabled: true, material: { color: {x:0.95,y:0.95,z:0.97}, ambient:0.05, diffuse:0.2, specular:1.0, shininess:128, reflectivity:0.85 }},
+  { center: {x:-3, y:0, z:-1}, radius: 1.0, enabled: true, material: { color: {x:0.9,y:0.1,z:0.1}, ambient:0.1, diffuse:0.8, specular:0.6, shininess:64, reflectivity:0.15 }},
+  { center: {x:2.5, y:-0.3, z:-1.5}, radius: 0.7, enabled: true, material: { color: {x:0.1,y:0.8,z:0.2}, ambient:0.1, diffuse:0.8, specular:0.5, shininess:48, reflectivity:0.1 }},
+  { center: {x:1.5, y:-0.5, z:2}, radius: 0.5, enabled: true, material: { color: {x:0.15,y:0.3,z:0.9}, ambient:0.1, diffuse:0.7, specular:0.8, shininess:96, reflectivity:0.25 }},
+  { center: {x:-1.5, y:-0.6, z:2.5}, radius: 0.4, enabled: true, material: { color: {x:0.9,y:0.75,z:0.2}, ambient:0.1, diffuse:0.6, specular:0.9, shininess:128, reflectivity:0.4 }},
+  { center: {x:3.5, y:0.2, z:1}, radius: 1.2, enabled: true, material: { color: {x:0.6,y:0.15,z:0.7}, ambient:0.1, diffuse:0.7, specular:0.5, shininess:48, reflectivity:0.2 }},
+  { center: {x:-0.5, y:-0.75, z:3}, radius: 0.25, enabled: true, material: { color: {x:1,y:1,z:1}, ambient:0.1, diffuse:0.6, specular:0.9, shininess:128, reflectivity:0.6 }},
+];
+
+const scene = {
+  spheres: JSON.parse(JSON.stringify(defaultSpheres)),
+  planes: [{
+    point: {x:0, y:-1, z:0},
+    normal: {x:0, y:1, z:0},
+    scale: 0.5,
+    mat1: { color:{x:0.9,y:0.9,z:0.9}, ambient:0.15, diffuse:0.6, specular:0.2, shininess:16, reflectivity:0.15 },
+    mat2: { color:{x:0.15,y:0.15,z:0.18}, ambient:0.15, diffuse:0.6, specular:0.2, shininess:16, reflectivity:0.15 },
+  }],
+  lights: [
+    { position:{x:-5,y:8,z:-3}, color:{x:1,y:0.95,z:0.9}, intensity:0.8 },
+    { position:{x:6,y:6,z:5}, color:{x:0.9,y:0.92,z:1}, intensity:0.5 },
+    { position:{x:0,y:3,z:8}, color:{x:0.8,y:0.85,z:1}, intensity:0.3 },
+  ],
+  camPos: {x:0, y:3, z:8},
+  camTarget: {x:0, y:0, z:0},
+  fov: 60,
+};
+
+// ─── DOM refs ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
+let worker = null;
+let rendering = false;
+let lastPixels = null;
+let renderWidth = 800, renderHeight = 450;
+
+// ─── Samples slider ───────────────────────────────────────
+$('samples').addEventListener('input', () => {
+  const v = parseInt($('samples').value);
+  $('samplesVal').textContent = (v * v) + 'x';
+});
+$('fov').addEventListener('input', () => {
+  $('fovVal').textContent = $('fov').value;
+  scene.fov = parseFloat($('fov').value);
+});
+$('sRefl').addEventListener('input', () => $('sReflVal').textContent = $('sRefl').value + '%');
+$('sShiny').addEventListener('input', () => $('sShinyVal').textContent = $('sShiny').value);
+
+// ─── Camera inputs ─────────────────────────────────────────
+['camX','camY','camZ'].forEach((id, i) => {
+  $(id).addEventListener('change', () => {
+    const keys = ['x','y','z'];
+    scene.camPos[keys[i]] = parseFloat($(id).value) || 0;
+  });
+});
+['tgtX','tgtY','tgtZ'].forEach((id, i) => {
+  $(id).addEventListener('change', () => {
+    const keys = ['x','y','z'];
+    scene.camTarget[keys[i]] = parseFloat($(id).value) || 0;
+  });
+});
+
+// ─── Sphere editing ────────────────────────────────────────
+function hexToVec(hex) {
+  const r = parseInt(hex.slice(1,3), 16) / 255;
+  const g = parseInt(hex.slice(3,5), 16) / 255;
+  const b = parseInt(hex.slice(5,7), 16) / 255;
+  return {x: r, y: g, z: b};
+}
+
+function vecToHex(v) {
+  const r = Math.round(Math.min(1, Math.max(0, v.x)) * 255).toString(16).padStart(2, '0');
+  const g = Math.round(Math.min(1, Math.max(0, v.y)) * 255).toString(16).padStart(2, '0');
+  const b = Math.round(Math.min(1, Math.max(0, v.z)) * 255).toString(16).padStart(2, '0');
+  return '#' + r + g + b;
+}
+
+function loadSphereUI(idx) {
+  const s = scene.spheres[idx];
+  $('sX').value = s.center.x;
+  $('sY').value = s.center.y;
+  $('sZ').value = s.center.z;
+  $('sR').value = s.radius;
+  $('sColor').value = vecToHex(s.material.color);
+  $('sRefl').value = Math.round(s.material.reflectivity * 100);
+  $('sReflVal').textContent = Math.round(s.material.reflectivity * 100) + '%';
+  $('sShiny').value = s.material.shininess;
+  $('sShinyVal').textContent = Math.round(s.material.shininess);
+  $('sEnabled').checked = s.enabled;
+}
+
+function saveSphereUI(idx) {
+  const s = scene.spheres[idx];
+  s.center.x = parseFloat($('sX').value) || 0;
+  s.center.y = parseFloat($('sY').value) || 0;
+  s.center.z = parseFloat($('sZ').value) || 0;
+  s.radius = parseFloat($('sR').value) || 0.5;
+  s.material.color = hexToVec($('sColor').value);
+  s.material.reflectivity = parseInt($('sRefl').value) / 100;
+  s.material.shininess = parseInt($('sShiny').value);
+  s.enabled = $('sEnabled').checked;
+}
+
+$('sphereSelect').addEventListener('change', () => {
+  saveSphereUI(currentSphere);
+  currentSphere = parseInt($('sphereSelect').value);
+  loadSphereUI(currentSphere);
+});
+
+let currentSphere = 0;
+loadSphereUI(0);
+
+// Save sphere on any input change
+['sX','sY','sZ','sR','sColor','sRefl','sShiny','sEnabled'].forEach(id => {
+  $(id).addEventListener('input', () => saveSphereUI(currentSphere));
+  $(id).addEventListener('change', () => saveSphereUI(currentSphere));
+});
+
+// ─── Render ────────────────────────────────────────────────
+function startRender() {
+  if (worker) worker.terminate();
+
+  const res = $('resolution').value.split('x');
+  renderWidth = parseInt(res[0]);
+  renderHeight = parseInt(res[1]);
+  const samples = parseInt($('samples').value);
+
+  saveSphereUI(currentSphere);
+
+  canvas.width = renderWidth;
+  canvas.height = renderHeight;
+  canvas.style.display = 'block';
+  $('placeholder').style.display = 'none';
+  $('renderInfo').style.display = 'block';
+  $('renderInfo').textContent = `${renderWidth}x${renderHeight} | ${samples*samples}x AA`;
+
+  rendering = true;
+  $('btnRender').style.display = 'none';
+  $('btnCancel').style.display = 'block';
+  $('progressWrap').style.display = 'block';
+  $('progressBar').style.width = '0%';
+  $('status').textContent = 'Rendering...';
+  $('status').className = 'status-text';
+  $('btnSave').disabled = true;
+  $('saveStatus').textContent = '';
+
+  const startTime = performance.now();
+
+  worker = new Worker('worker.js');
+  worker.onmessage = (e) => {
+    const msg = e.data;
+
+    if (msg.type === 'progress') {
+      const pct = Math.round((msg.row / msg.total) * 100);
+      $('progressBar').style.width = pct + '%';
+      $('status').textContent = `Rendering... ${pct}%`;
+
+      // Draw progress
+      const imageData = new ImageData(new Uint8ClampedArray(msg.pixels), renderWidth, renderHeight);
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    if (msg.type === 'done') {
+      rendering = false;
+      const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+      $('btnRender').style.display = 'block';
+      $('btnCancel').style.display = 'none';
+      $('progressWrap').style.display = 'none';
+      $('status').textContent = `Done in ${elapsed}s`;
+      $('status').className = 'status-text success';
+      $('btnSave').disabled = false;
+
+      lastPixels = new Uint8ClampedArray(msg.pixels);
+      const imageData = new ImageData(lastPixels, renderWidth, renderHeight);
+      ctx.putImageData(imageData, 0, 0);
+
+      $('renderInfo').textContent = `${renderWidth}x${renderHeight} | ${parseInt($('samples').value)**2}x AA | ${elapsed}s`;
+    }
+  };
+
+  worker.postMessage({
+    type: 'render',
+    scene,
+    width: renderWidth,
+    height: renderHeight,
+    samples,
+  });
+}
+
+$('btnRender').addEventListener('click', startRender);
+
+$('btnCancel').addEventListener('click', () => {
+  if (worker) worker.terminate();
+  rendering = false;
+  $('btnRender').style.display = 'block';
+  $('btnCancel').style.display = 'none';
+  $('progressWrap').style.display = 'none';
+  $('status').textContent = 'Cancelled';
+  $('status').className = 'status-text';
+});
+
+// ─── Save ──────────────────────────────────────────────────
+$('btnSave').addEventListener('click', async () => {
+  if (!lastPixels) return;
+
+  if (window.api) {
+    // Electron: native save dialog
+    const result = await window.api.saveFile({
+      defaultName: 'render.bmp',
+      pixels: Array.from(lastPixels),
+      width: renderWidth,
+      height: renderHeight,
+    });
+    if (result.success) {
+      $('saveStatus').textContent = 'Saved to ' + result.path;
+      $('saveStatus').className = 'status-text success';
+    }
+  } else {
+    // Browser fallback: download via blob
+    const bmpData = createBMP(lastPixels, renderWidth, renderHeight);
+    const blob = new Blob([bmpData], { type: 'image/bmp' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'render.bmp';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    $('saveStatus').textContent = 'Downloaded!';
+    $('saveStatus').className = 'status-text success';
+  }
+});
+
+function createBMP(rgba, w, h) {
+  const rowSize = Math.ceil((w * 3) / 4) * 4;
+  const imageSize = rowSize * h;
+  const fileSize = 54 + imageSize;
+  const buf = new ArrayBuffer(fileSize);
+  const view = new DataView(buf);
+  const bytes = new Uint8Array(buf);
+
+  bytes[0] = 0x42; bytes[1] = 0x4D;
+  view.setInt32(2, fileSize, true);
+  view.setInt32(10, 54, true);
+  view.setInt32(14, 40, true);
+  view.setInt32(18, w, true);
+  view.setInt32(22, h, true);
+  view.setInt16(26, 1, true);
+  view.setInt16(28, 24, true);
+  view.setInt32(34, imageSize, true);
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const src = (y * w + x) * 4;
+      const dst = 54 + y * rowSize + x * 3;
+      bytes[dst + 0] = rgba[src + 2];
+      bytes[dst + 1] = rgba[src + 1];
+      bytes[dst + 2] = rgba[src + 0];
+    }
+  }
+  return buf;
+}
+
+// ─── Keyboard shortcut ─────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !rendering) {
+    startRender();
+  }
+});
+</script>
+
+</body>
+</html>
