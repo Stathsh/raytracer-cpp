@@ -324,8 +324,9 @@
   <p class="platform-note" id="platformNote">Available for macOS, Linux</p>
 
   <div class="mac-note" id="macNote">
-    <strong>macOS users:</strong> After downloading, extract the zip file. If macOS blocks the app,
-    right-click the app and choose "Open", then click "Open" in the dialog. This is only needed the first time.
+    <strong>macOS users:</strong> After extracting the zip, open <strong>Terminal</strong> and run:<br>
+    <code style="display:inline-block;margin:8px 0 4px;background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:6px;font-size:0.85rem;color:#c0c0e0;">xattr -cr ~/Downloads/Ray\ Tracer.app</code><br>
+    Then double-click the app to open it. This removes the macOS quarantine flag (needed once for unsigned apps).
   </div>
 </section>
 
@@ -378,12 +379,13 @@
   <div class="tab-content active" id="tab-mac">
     <div class="code-block">
       <span class="comment"># 1. Download the zip for your Mac</span><br>
-      <span class="comment">#    Apple Silicon (M1/M2/M3): RayTracer-mac-apple-silicon.zip</span><br>
+      <span class="comment">#    Apple Silicon (M1/M2/M3/M4): RayTracer-mac-apple-silicon.zip</span><br>
       <span class="comment">#    Intel Mac: RayTracer-mac-intel.zip</span><br><br>
       <span class="comment"># 2. Extract the zip (double-click in Finder)</span><br><br>
-      <span class="comment"># 3. Open "Ray Tracer.app"</span><br>
-      <span class="comment">#    If blocked: right-click > Open > click Open</span><br><br>
-      <span class="comment"># 4. Click "Render" and enjoy!</span>
+      <span class="comment"># 3. Remove the quarantine flag (required once)</span><br>
+      <span class="cmd">xattr -cr</span> ~/Downloads/Ray\ Tracer.app<br><br>
+      <span class="comment"># 4. Double-click "Ray Tracer.app" to open</span><br>
+      <span class="comment"># 5. Click "Render" and enjoy!</span>
     </div>
   </div>
 
